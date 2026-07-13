@@ -330,3 +330,233 @@ Route::get('/lotes/inventario', function () {
 
     echo $html;
 });
+
+// Parámetro obligatorio
+Route::get('/usuarios/{id}', function (int $id) {
+    return "Usuario con ID: $id";
+});
+
+// Múltiples parámetros
+Route::get('/posts/{categoria}/{post}', function ($categoria, $post) {
+    return "Categoría: $categoria, Post: $post";
+});
+
+// Parámetro opcional
+Route::get('/saludo/{nombre?}', function ($nombre = 'Invitado') {
+    return "Hola, $nombre";
+});
+
+// Restricción con where
+Route::get('/usuarios-numero/{id}', function ($id) {
+    return "Usuario número: $id";
+})->where('id', '[0-9]+');
+
+// Helper whereNumber()
+Route::get('/cliente/{id}', function ($id) {
+    return "Cliente: $id";
+})->whereNumber('id');
+
+// Helper whereAlpha()
+Route::get('/producto/{nombre}', function ($nombre) {
+    return "Producto: $nombre";
+})->whereAlpha('nombre');
+
+// Helper whereAlphaNumeric()
+Route::get('/codigo/{codigo}', function ($codigo) {
+    return "Código: $codigo";
+})->whereAlphaNumeric('codigo');
+
+
+Route::get('/facturas/clientes/historial', function () {
+
+    $facturas = [
+        (object)[
+            'num_factura' => 'F001',
+            'cliente' => 'Juan Perez',
+            'fecha_emision' => '2026-07-10',
+            'total_pagar' => 120.50,
+            'estado' => 'Pagada'
+        ],
+        (object)[
+            'num_factura' => 'F002',
+            'cliente' => 'Maria Lopez',
+            'fecha_emision' => '2026-07-11',
+            'total_pagar' => 85.75,
+            'estado' => 'Pendiente'
+        ],
+        (object)[
+            'num_factura' => 'F003',
+            'cliente' => 'Carlos Martinez',
+            'fecha_emision' => '2026-07-12',
+            'total_pagar' => 250.00,
+            'estado' => 'Pagada'
+        ]
+    ];
+
+    $html = "<h1>Historial General de Facturas</h1>";
+    $html .= "<table border='1' cellpadding='10'>";
+    $html .= "
+        <tr>
+            <th>Número</th>
+            <th>Cliente</th>
+            <th>Fecha</th>
+            <th>Total</th>
+            <th>Estado</th>
+        </tr>
+    ";
+
+    foreach ($facturas as $factura) {
+
+        $estado = $factura->estado;
+
+        if ($factura->estado == "Pendiente") {
+            $estado = "⚠ PENDIENTE DE COBRO";
+        }
+
+        $html .= "
+            <tr>
+                <td>{$factura->num_factura}</td>
+                <td>{$factura->cliente}</td>
+                <td>{$factura->fecha_emision}</td>
+                <td>\${$factura->total_pagar}</td>
+                <td>{$estado}</td>
+            </tr>
+        ";
+    }
+
+    $html .= "</table>";
+
+    echo $html;
+});
+
+Route::get('/facturas/clientes/detalle/{numero}', function ($numero) {
+
+    $facturas = [
+        (object)[
+            'num_factura' => 'F001',
+            'cliente' => 'Juan Perez',
+            'fecha_emision' => '2026-07-10',
+            'total_pagar' => 120.50,
+            'estado' => 'Pagada'
+        ],
+        (object)[
+            'num_factura' => 'F002',
+            'cliente' => 'Maria Lopez',
+            'fecha_emision' => '2026-07-11',
+            'total_pagar' => 85.75,
+            'estado' => 'Pendiente'
+        ],
+        (object)[
+            'num_factura' => 'F003',
+            'cliente' => 'Carlos Martinez',
+            'fecha_emision' => '2026-07-12',
+            'total_pagar' => 250.00,
+            'estado' => 'Pagada'
+        ]
+    ];
+
+    $facturaEncontrada = null;
+
+    foreach ($facturas as $factura) {
+        if ($factura->num_factura == $numero) {
+            $facturaEncontrada = $factura;
+            break;
+        }
+    }
+
+    if ($facturaEncontrada) {
+
+        $html = "
+            <div style='border:1px solid black; padding:20px; width:400px'>
+                <h2>Ficha de Factura</h2>
+
+                <ul>
+                    <li><strong>Número:</strong> {$facturaEncontrada->num_factura}</li>
+                    <li><strong>Cliente:</strong> {$facturaEncontrada->cliente}</li>
+                    <li><strong>Fecha:</strong> {$facturaEncontrada->fecha_emision}</li>
+                    <li><strong>Total:</strong> \${$facturaEncontrada->total_pagar}</li>
+                    <li><strong>Estado:</strong> {$facturaEncontrada->estado}</li>
+                </ul>
+            </div>
+        ";
+
+    } else {
+
+        $html = "<h1>Factura No Encontrada</h1>";
+    }
+
+    echo $html;
+});
+
+
+Route::get('/facturas/proveedores/resumen', function () {
+
+    $proveedores = [
+        (object)[
+            'proveedor' => 'Laboratorio Bayer',
+            'nrc' => '12345-6',
+            'monto_sin_iva' => 500
+        ],
+        (object)[
+            'proveedor' => 'Laboratorio Pfizer',
+            'nrc' => '23456-7',
+            'monto_sin_iva' => 750
+        ],
+        (object)[
+            'proveedor' => 'Laboratorio MK',
+            'nrc' => '34567-8',
+            'monto_sin_iva' => 900
+        ]
+    ];
+
+    $totalSinIva = 0;
+    $totalIva = 0;
+    $totalGeneral = 0;
+
+    $html = "<h1>Libro de Facturas de Proveedores</h1>";
+    $html .= "<table border='1' cellpadding='10'>";
+    $html .= "
+        <tr>
+            <th>Proveedor</th>
+            <th>NRC</th>
+            <th>Monto sin IVA</th>
+            <th>IVA 13%</th>
+            <th>Total</th>
+        </tr>
+    ";
+
+    foreach ($proveedores as $proveedor) {
+
+        $iva = $proveedor->monto_sin_iva * 0.13;
+        $total = $proveedor->monto_sin_iva + $iva;
+
+        $totalSinIva += $proveedor->monto_sin_iva;
+        $totalIva += $iva;
+        $totalGeneral += $total;
+
+        $html .= "
+            <tr>
+                <td>{$proveedor->proveedor}</td>
+                <td>{$proveedor->nrc}</td>
+                <td>\${$proveedor->monto_sin_iva}</td>
+                <td>\$" . number_format($iva,2) . "</td>
+                <td>\$" . number_format($total,2) . "</td>
+            </tr>
+        ";
+    }
+
+    $html .= "
+        <tfoot>
+            <tr>
+                <th colspan='2'>Totales</th>
+                <th>\$" . number_format($totalSinIva,2) . "</th>
+                <th>\$" . number_format($totalIva,2) . "</th>
+                <th>\$" . number_format($totalGeneral,2) . "</th>
+            </tr>
+        </tfoot>
+    ";
+
+    $html .= "</table>";
+
+    echo $html;
+});
